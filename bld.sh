@@ -14,6 +14,6 @@ echo "Building code"
 
 rm -f cfg_test
 
-gcc -Wall -pthread -g -o cfg_test -pthread cfg.c hmap.c hmape.c err.c cfg_test.c; if [ $? -ne 0 ]; then exit 1; fi
+gcc -Wall -pthread -g -o cfg_test -pthread cfg.c hmap.c err.c cfg_test.c; if [ $? -ne 0 ]; then exit 1; fi
 
 echo "Build successful"

@@ -9,8 +9,8 @@
 # is https://github.com/fordsfords/lsim
 */
 
-#ifndef ERR_H
-#define ERR_H
+#ifndef CFG_H
+#define CFG_H
 
 #include "err.h"
 #include "hmap.h"
@@ -25,16 +25,20 @@ struct cfg_s {
 };
 typedef struct cfg_s cfg_t;
 
-#define ERR(err_code) extern char *err_code
-ERR(CFG_ERR_LINETOOLONG);
-ERR(CFG_ERR_NOMEM);
-ERR(CFG_ERR_HMAP);
-#undef ERR
+#define CFG_ERR_PARAM 1
+#define CFG_ERR_LINETOOLONG 2
+#define CFG_ERR_NOMEM 3
+#define CFG_ERR_BADFILE 4
+#define CFG_ERR_EXTRA 5
+#define CFG_ERR_INTERNAL 6
 
-#define CFG_CODE_BADFILE -1
+ERR_F cfg_create(cfg_t **rtn_cfg);
+ERR_F cfg_delete(cfg_t *cfg);
+ERR_F cfg_parse_line(cfg_t *cfg, const char *iline, const char *filename, int line_num);
+ERR_F cfg_parse_file(cfg_t *cfg, const char *filename);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // ERR_H
+#endif  /* CFG_H */

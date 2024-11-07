@@ -22,63 +22,122 @@
  * I wouldn't expect more than a few hundred options at the most. */
 #define CFG_OPTION_MAP_SIZE 1009
 
-ERR_F cfg_create(cfg_t **rtn_cfg, char *filename, err_t *err) {
-  err_t err;
-  FILE *file_fp;
+ERR_F cfg_create(cfg_t **rtn_cfg) {
+  err_t *err;
 
-  cfg_t cfg = malloc(sizeof(cfg_t));  ERR_ASSRT(cfg, CFG_ERR_NOMEM, err);
-  *cfg = (cfg_t )0;
+  cfg_t *cfg;
+  ERR_ASSRT(cfg = calloc(1, sizeof(cfg_t)), CFG_ERR_NOMEM);
 
   ERR(hmap_create(&(cfg->option_vals), CFG_OPTION_MAP_SIZE));
 
   err = hmap_create(&(cfg->option_locations), CFG_OPTION_MAP_SIZE);
   if (err) {
-    hmap_delete(cfg->option_vals);
+    ERR(hmap_delete(cfg->option_vals));
     ERR_RETHROW(err, err->code);
   }
 
-  file_fp = fopen(
-
   *rtn_cfg = cfg;
-  ERR_RTN_OK(err);
+  return ERR_OK;
 }  /* cfg_create */
 
 
-ERR_F cfg_parse_line(cfg_t *cfg, char *iline, char *location) {
-  /* Strip optional comment from line. */
-  no_comment = strtok(line, "#");
-
-  char *key = strtok(no_comment, "\t ");
-  if (key && strlen(key) > 0) {
-    val = strtok(no_comment, "\n\r\t ");
-    if (val) {
-      val = strdup(val);  ERR_ASSRT(val, CFG_ERR_NOMEM, err);
-      hmap_write(cfg->option_map, key, strlen(key), val, err);
-    } else {
-      val = strdup("");  ERR_ASSRT(val, CFG_ERR_NOMEM, err);
-      hmap_write(cfg->option_map, key, strlen(key), val);
-    }
-  }
-
-  return ERR_OK;
-}
-
-
 ERR_F cfg_delete(cfg_t *cfg) {
-  hmap_delete(cfg->option_vals, NULL);
+  hmap_node_t *node;
+
+  node = NULL;  /* Start at beginning. */
+  do {
+    ERR(hmap_next(cfg->option_vals, &node));
+    if (node) {
+        ERR_ASSRT(node->value != NULL, CFG_ERR_INTERNAL);
+        free(node->value);
+    }
+  } while (node);
+  ERR(hmap_delete(cfg->option_vals));
+
+  node = NULL;  /* Start at beginning. */
+  do {
+    ERR(hmap_next(cfg->option_locations, &node));
+    if (node) {
+        ERR_ASSRT(node->value != NULL, CFG_ERR_INTERNAL);
+        free(node->value);
+    }
+  } while (node);
+  ERR(hmap_delete(cfg->option_locations));
 
   return ERR_OK;
 }  /* cfg_delete */
 
-/* Parse space-delimited keyword/value pairs. */
-ERR_F cfg_parse_file(FILE *fp, hmap_t *hmap) {
-  char line[1024];
 
-  while (fgets(iline, sizeof(iline), fp)) {
-    char *no_comment, *key, *val;
-    size_t len = strlen(line);
-    ERR_ASSRT(len < sizeof(line) - 1) {  /* Line too long. */
+ERR_F cfg_parse_line(cfg_t *cfg, const char *iline, const char *filename, int line_num) {
+  char *local_iline;
+  char *strtok_state;
+
+  ERR_ASSRT(local_iline = strdup(iline), CFG_ERR_NOMEM);  /* Need local copy because strtoc modifies string. */
+
+  /* Strip (optional) comment from iline. */
+  char *hash = strchr(local_iline, '#');
+  if (hash) {
+    *hash = '\0';  /* Force-end string at the "#" to strip comment. */
   }
 
+  /* strtok_r skips leading delims. */
+  char *key = strtok_r(local_iline, " \t\n\r", &strtok_state);
+  if (key && strlen(key) > 0) {
+    char *val = strtok_r(NULL, " \t\n\r", &strtok_state);
+    if (val) {
+      /* Make sure there isn't any extra stuff after the value. */
+      char *extra = strtok_r(NULL, " \t\n\r", &strtok_state);
+      ERR_ASSRT(extra == NULL, CFG_ERR_EXTRA);
+
+      ERR_ASSRT(val = strdup(val), CFG_ERR_NOMEM);
+      ERR(hmap_write(cfg->option_vals, key, strlen(key), val));
+    } else {
+      ERR_ASSRT(val = strdup(""), CFG_ERR_NOMEM);
+      ERR(hmap_write(cfg->option_vals, key, strlen(key), val));
+    }
+
+    char *location;
+    ERR_ASSRT(location = err_asprintf("%s:%d", filename, line_num), CFG_ERR_NOMEM);
+    ERR(hmap_write(cfg->option_locations, key, strlen(key), location));
+  }  /* if key */
+
+  free(local_iline);
   return ERR_OK;
-}
+}  /* cfg_parse_line */
+
+
+ERR_F cfg_parse_file(cfg_t *cfg, const char *filename) {
+  char iline[1024];
+  FILE *file_fp;
+  err_t *err = ERR_OK;
+
+  ERR_ASSRT(cfg, CFG_ERR_PARAM);
+  ERR_ASSRT(filename, CFG_ERR_PARAM);
+  if (strcmp(filename, "-") == 0) {
+    file_fp = stdin;
+  } else {
+    file_fp = fopen(filename, "r");
+  }
+  ERR_ASSRT(file_fp, CFG_ERR_BADFILE);
+
+  int line_num = 0;
+  while (fgets(iline, sizeof(iline), file_fp)) {
+    line_num++;
+    size_t len = strlen(iline);
+    ERR_ASSRT(len < sizeof(iline) - 1, CFG_ERR_LINETOOLONG);  /* Line too long. */
+
+    err = cfg_parse_line(cfg, iline, filename, line_num);
+    if (err) { break; }
+  }  /* while */
+
+  if (strcmp(filename, "-") == 0) {
+    /* Don't close stdin. */
+  } else {
+    fclose(file_fp);
+  }
+
+  if (err) {
+    ERR_RETHROW(err, err->code);
+  }
+  return ERR_OK;
+}  /* cfg_parse_file */

@@ -71,11 +71,12 @@ ERR_F hmap_create(hmap_t **rtn_hmap, size_t table_size) {
 
   ERR_ASSRT(table_size != 0, HMAP_ERR_PARAM);
 
-  hmap = malloc(sizeof(hmap_t));
+  hmap = calloc(1, sizeof(hmap_t));
   ERR_ASSRT(hmap, HMAP_ERR_NOMEM);
 
   (hmap)->table_size = table_size;
   (hmap)->seed = 42;  /* Could be made in input parameter. */
+  (hmap)->num_entries = 0;
   (hmap)->table = calloc(table_size, sizeof(hmap_node_t*));
   if (!(hmap)->table) {
     free(hmap);
@@ -95,6 +96,7 @@ ERR_F hmap_delete(hmap_t *hmap) {
     hmap_node_t *node = hmap->table[bucket];
     while (node) {
       hmap_node_t *next = node->next;
+      /* The application is responsible for freeing the value. */
       free(node->key);
       free(node);
       node = next;
@@ -123,7 +125,7 @@ ERR_F hmap_write(hmap_t *hmap, void *key, size_t key_size, void *val) {
   }
 
   /* Not found, create new entry. */
-  hmap_node_t *new_node = malloc(sizeof(hmap_node_t));
+  hmap_node_t *new_node = calloc(1, sizeof(hmap_node_t));
   ERR_ASSRT(new_node, HMAP_ERR_NOMEM);
 
   new_node->key = malloc(key_size);
@@ -139,6 +141,7 @@ ERR_F hmap_write(hmap_t *hmap, void *key, size_t key_size, void *val) {
   /* Insert at head of list for this bucket */
   new_node->next = hmap->table[bucket];
   hmap->table[bucket] = new_node;
+  hmap->num_entries ++;
 
   return ERR_OK;
 }  /* hmap_write */

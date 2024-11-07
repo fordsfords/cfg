@@ -9,6 +9,7 @@ Simple configurator in C.
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [Table of contents](#table-of-contents)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [Introduction](#introduction)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [API](#api)  
+&nbsp;&nbsp;&nbsp;&nbsp;&bull; [Integration with "err" and "hmap".](#integration-with-err-and-hmap)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [Development](#development)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [License](#license)  
 <!-- TOC created by '../mdtoc/mdtoc.pl README.md' (see https://github.com/fordsfords/mdtoc) -->
@@ -18,6 +19,8 @@ Simple configurator in C.
 ## Introduction
 
 tbd
+
+* Values may not contain whitespace. Special characters are OK and are not interpreted in any special way.
 
 
 ## API

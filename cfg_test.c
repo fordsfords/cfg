@@ -18,6 +18,8 @@
 #include <pthread.h>
 #endif
 #include "err.h"
+#include "hmap.h"
+#include "cfg.h"
 
 #if defined(_WIN32)
 #define MY_SLEEP_MS(msleep_msecs) Sleep(msleep_msecs)
@@ -81,36 +83,71 @@ void parse_cmdline(int argc, char **argv) {
 }  /* parse_cmdline */
 
 
-int funct_b(char b, err_t *err) {
-  if (err) { err->code = ERR_OK; }
-  ERR_ASSRT(b == 'b', ERR_CODE_PARAM, err);
+void test1() {
+  cfg_t *cfg;
+  char *val;
 
-  return ERR_OK;
-}  /* funct_b */
+  E(cfg_create(&cfg));
 
+  E(cfg_parse_line(cfg, "", "test1a", 1));
+  ASSRT(cfg->option_vals->num_entries == 0);
+  E(cfg_parse_line(cfg, "   ", "test1a", 2));
+  ASSRT(cfg->option_vals->num_entries == 0);
+  E(cfg_parse_line(cfg, "#  ", "test1a", 3));
+  ASSRT(cfg->option_vals->num_entries == 0);
+  E(cfg_parse_line(cfg, " # ", "test1a", 4));
+  ASSRT(cfg->option_vals->num_entries == 0);
 
-int test1() {
-  err_t local_err;
-  int status;
+  E(cfg_parse_line(cfg, "aaa", "test1a", 5));
+  ASSRT(cfg->option_vals->num_entries == 1);
+  E(hmap_lookup(cfg->option_vals, "aaa", 3, (void **)&val));
+  ASSRT(strlen(val) == 0);
+  ASSRT(cfg->option_locations->num_entries == 1);
+  E(hmap_lookup(cfg->option_locations, "aaa", 3, (void **)&val));
+  ASSRT(strcmp(val, "test1a:5") == 0);
 
-  E(funct_b('b', &local_err));
-  ASSRT(local_err.code == ERR_OK);
+  E(cfg_parse_line(cfg, " aab # ", "test1a", 6));
+  ASSRT(cfg->option_vals->num_entries == 2);
+  E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
+  ASSRT(strlen(val) == 0);
+  ASSRT(cfg->option_locations->num_entries == 2);
+  E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
+  ASSRT(strcmp(val, "test1a:6") == 0);
 
-  E(funct_b('b', NULL));
+  E(cfg_parse_line(cfg, "aac 113", "test1a", 7));
+  ASSRT(cfg->option_vals->num_entries == 3);
+  E(hmap_lookup(cfg->option_vals, "aac", 3, (void **)&val));
+  ASSRT(strcmp(val, "113") == 0);
+  ASSRT(cfg->option_locations->num_entries == 3);
+  E(hmap_lookup(cfg->option_locations, "aac", 3, (void **)&val));
+  ASSRT(strcmp(val, "test1a:7") == 0);
 
-  status = funct_b('x', &local_err);
-  ASSRT(status == ERR_CODE_PARAM);
-  ASSRT(local_err.code == ERR_CODE_PARAM);
+  E(cfg_parse_line(cfg, "  aad 114  #  xyz", "test1a", 8));
+  ASSRT(cfg->option_vals->num_entries == 4);
+  E(hmap_lookup(cfg->option_vals, "aad", 3, (void **)&val));
+  ASSRT(strcmp(val, "114") == 0);
+  ASSRT(cfg->option_locations->num_entries == 4);
+  E(hmap_lookup(cfg->option_locations, "aad", 3, (void **)&val));
+  ASSRT(strcmp(val, "test1a:8") == 0);
 
-  return ERR_OK;
+  /* Overwrite previous one. */
+  E(cfg_parse_line(cfg, " aab  112#", "test1a", 9));
+  ASSRT(cfg->option_vals->num_entries == 4);
+  E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
+  ASSRT(strcmp(val, "112") == 0);
+  ASSRT(cfg->option_locations->num_entries == 4);
+  E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
+  ASSRT(strcmp(val, "test1a:9") == 0);
+
+  /* Illegal. */
+  err = cfg_parse_line(cfg, " aab  112 xyz", "test1a", 9);
+  ASSRT(err);
+  ASSRT(err->);
+  ASSRT(cfg->option_vals->num_entries == 4);
+
+  E(cfg_delete(cfg));
 }  /* test1 */
 
-
-int test2() {
-  funct_b('x', NULL);
-
-  return 0;
-}  /* test1 */
 
 int main(int argc, char **argv) {
   parse_cmdline(argc, argv);
@@ -118,13 +155,6 @@ int main(int argc, char **argv) {
   if (o_testnum == 0 || o_testnum == 1) {
     test1();
     printf("test1: success\n");
-  }
-
-  if (o_testnum == 0 || o_testnum == 2) {
-    test2();
-    printf("test2: FAIL, should not get here!\n"); fflush(stdout);
-    /* Test script expects a bad status. */
-    return 0;
   }
 
   return 0;

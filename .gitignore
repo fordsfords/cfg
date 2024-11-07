@@ -1,7 +1,13 @@
+x
+*.x
+x.*
+*.log
+
 # Prerequisites
 *.d
 
 # Object files
+cfg_test
 *.o
 *.ko
 *.obj
