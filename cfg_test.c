@@ -86,6 +86,7 @@ void parse_cmdline(int argc, char **argv) {
 void test1() {
   cfg_t *cfg;
   char *val;
+  err_t *err;
 
   E(cfg_create(&cfg));
 
@@ -98,7 +99,12 @@ void test1() {
   E(cfg_parse_line(cfg, " # ", "test1a", 4));
   ASSRT(cfg->option_vals->num_entries == 0);
 
-  E(cfg_parse_line(cfg, "aaa", "test1a", 5));
+  err = cfg_parse_line(cfg, "aaa", "test1a", 5);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_NOEQUALS);
+  err_dispose(err);
+
+  E(cfg_parse_line(cfg, "aaa=", "test1a", 5));
   ASSRT(cfg->option_vals->num_entries == 1);
   E(hmap_lookup(cfg->option_vals, "aaa", 3, (void **)&val));
   ASSRT(strlen(val) == 0);
@@ -106,7 +112,7 @@ void test1() {
   E(hmap_lookup(cfg->option_locations, "aaa", 3, (void **)&val));
   ASSRT(strcmp(val, "test1a:5") == 0);
 
-  E(cfg_parse_line(cfg, " aab # ", "test1a", 6));
+  E(cfg_parse_line(cfg, " aab = # ", "test1a", 6));
   ASSRT(cfg->option_vals->num_entries == 2);
   E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
   ASSRT(strlen(val) == 0);
@@ -114,7 +120,7 @@ void test1() {
   E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
   ASSRT(strcmp(val, "test1a:6") == 0);
 
-  E(cfg_parse_line(cfg, "aac 113", "test1a", 7));
+  E(cfg_parse_line(cfg, "aac=113", "test1a", 7));
   ASSRT(cfg->option_vals->num_entries == 3);
   E(hmap_lookup(cfg->option_vals, "aac", 3, (void **)&val));
   ASSRT(strcmp(val, "113") == 0);
@@ -122,28 +128,22 @@ void test1() {
   E(hmap_lookup(cfg->option_locations, "aac", 3, (void **)&val));
   ASSRT(strcmp(val, "test1a:7") == 0);
 
-  E(cfg_parse_line(cfg, "  aad 114  #  xyz", "test1a", 8));
+  E(cfg_parse_line(cfg, "  aad = 1 1    4  #  xyz", "test1a", 8));
   ASSRT(cfg->option_vals->num_entries == 4);
   E(hmap_lookup(cfg->option_vals, "aad", 3, (void **)&val));
-  ASSRT(strcmp(val, "114") == 0);
+  ASSRT(strcmp(val, "1 1    4") == 0);
   ASSRT(cfg->option_locations->num_entries == 4);
   E(hmap_lookup(cfg->option_locations, "aad", 3, (void **)&val));
   ASSRT(strcmp(val, "test1a:8") == 0);
 
   /* Overwrite previous one. */
-  E(cfg_parse_line(cfg, " aab  112#", "test1a", 9));
+  E(cfg_parse_line(cfg, " aab= 1=12#", "test1a", 9));
   ASSRT(cfg->option_vals->num_entries == 4);
   E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
-  ASSRT(strcmp(val, "112") == 0);
+  ASSRT(strcmp(val, "1=12") == 0);
   ASSRT(cfg->option_locations->num_entries == 4);
   E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
   ASSRT(strcmp(val, "test1a:9") == 0);
-
-  /* Illegal. */
-  err = cfg_parse_line(cfg, " aab  112 xyz", "test1a", 9);
-  ASSRT(err);
-  ASSRT(err->);
-  ASSRT(cfg->option_vals->num_entries == 4);
 
   E(cfg_delete(cfg));
 }  /* test1 */

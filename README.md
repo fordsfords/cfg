@@ -20,6 +20,17 @@ Simple configurator in C.
 
 tbd
 
+Possible enhancements:
+* Pass in an array of valid keywords, with default values
+(no location indicates unmodified default).
+char *valid_opts[] = { "abc 123" };
+This way, if the user mistypes a keyword, will get a warning/error.
+Could even have flags that indicate if a keyword is required.
+* %include file
+* abc %get_env MY_ENV_VAR
+* Quotes strings to get whitespace in vals.
+
+Random Facts:
 * Values may not contain whitespace. Special characters are OK and are not interpreted in any special way.
 
 

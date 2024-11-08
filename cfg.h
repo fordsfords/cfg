@@ -25,12 +25,13 @@ struct cfg_s {
 };
 typedef struct cfg_s cfg_t;
 
-#define CFG_ERR_PARAM 1
-#define CFG_ERR_LINETOOLONG 2
+#define CFG_ERR_INTERNAL 1
+#define CFG_ERR_PARAM 2
 #define CFG_ERR_NOMEM 3
 #define CFG_ERR_BADFILE 4
-#define CFG_ERR_EXTRA 5
-#define CFG_ERR_INTERNAL 6
+#define CFG_ERR_LINETOOLONG 5
+#define CFG_ERR_NOEQUALS 6
+#define CFG_ERR_NOKEY 7
 
 ERR_F cfg_create(cfg_t **rtn_cfg);
 ERR_F cfg_delete(cfg_t *cfg);

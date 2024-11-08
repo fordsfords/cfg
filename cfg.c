@@ -68,6 +68,27 @@ ERR_F cfg_delete(cfg_t *cfg) {
 }  /* cfg_delete */
 
 
+char *trim(char *in_str) {
+  /* Skip over initial whitespace. */
+  char *first_nonspace = in_str;
+  while(isspace((unsigned char)*first_nonspace)) {
+    str++;
+  }
+  int len = strlen(first_nonspace);
+  if (len == 0) {  /* empty line. */
+    return first_nonspace;
+  }
+
+  /* Trim final whitespace. */
+  while (len > 0 && isspace((unsigned char)first_nonspace[len - 1])) {
+    len --;
+  }
+  first_nonspace[len] = '\0';
+
+  return first_non_space;
+}  /* trim */
+
+
 ERR_F cfg_parse_line(cfg_t *cfg, const char *iline, const char *filename, int line_num) {
   char *local_iline;
   char *strtok_state;
@@ -80,26 +101,30 @@ ERR_F cfg_parse_line(cfg_t *cfg, const char *iline, const char *filename, int li
     *hash = '\0';  /* Force-end string at the "#" to strip comment. */
   }
 
-  /* strtok_r skips leading delims. */
-  char *key = strtok_r(local_iline, " \t\n\r", &strtok_state);
-  if (key && strlen(key) > 0) {
-    char *val = strtok_r(NULL, " \t\n\r", &strtok_state);
-    if (val) {
-      /* Make sure there isn't any extra stuff after the value. */
-      char *extra = strtok_r(NULL, " \t\n\r", &strtok_state);
-      ERR_ASSRT(extra == NULL, CFG_ERR_EXTRA);
+  /* Skip blank lines. */
+  char *key = trim(local_line);  /* Trim whitespace. */
+  if (*key == '\0') {
+    return ERR_OK;
+  }
 
-      ERR_ASSRT(val = strdup(val), CFG_ERR_NOMEM);
-      ERR(hmap_write(cfg->option_vals, key, strlen(key), val));
-    } else {
-      ERR_ASSRT(val = strdup(""), CFG_ERR_NOMEM);
-      ERR(hmap_write(cfg->option_vals, key, strlen(key), val));
-    }
+  /* Use equals sign to split key and value. */
+  char *equals = strchr(trimmed_line, '=');
+  ERR_ASSRT(equals, CFG_ERR_NOEQUALS);
+  *equals = '\0';
+  char *value = equals + 1;
 
-    char *location;
-    ERR_ASSRT(location = err_asprintf("%s:%d", filename, line_num), CFG_ERR_NOMEM);
-    ERR(hmap_write(cfg->option_locations, key, strlen(key), location));
-  }  /* if key */
+  key = trim(key);
+  ERR_ASSRT(strlen(key) > 0, CFG_ERR_NOKEY);
+  value = trim(value);
+
+  /* Make value its own mem segment to store in hash. */
+  ERR_ASSRT(val = strdup(val), CFG_ERR_NOMEM);
+  ERR(hmap_write(cfg->option_vals, key, strlen(key), val));
+
+  /* Remember location for this option. */
+  char *location;
+  ERR_ASSRT(location = err_asprintf("%s:%d", filename, line_num), CFG_ERR_NOMEM);
+  ERR(hmap_write(cfg->option_locations, key, strlen(key), location));
 
   free(local_iline);
   return ERR_OK;
@@ -141,3 +166,11 @@ ERR_F cfg_parse_file(cfg_t *cfg, const char *filename) {
   }
   return ERR_OK;
 }  /* cfg_parse_file */
+
+
+ERR_F cfg_get_str_val(cfg_t *cfg, const char *key) {
+}  /* cfg_get_str_val */
+
+
+ERR_F cfg_get_int_val(cfg_t *cfg, const char *key) {
+}  /* cfg_get_int_val */
