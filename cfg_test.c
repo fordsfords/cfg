@@ -29,7 +29,7 @@
 
 #define E(e_test) do { \
   if ((e_test) != ERR_OK) { \
-    fprintf(stderr, "ERROR [%s:%d]: '%s' returned -1\n", __FILE__, __LINE__, #e_test); \
+    fprintf(stderr, "ERROR [%s:%d]: '%s' returned error\n", __FILE__, __LINE__, #e_test); \
     exit(1); \
   } \
 } while (0)
@@ -90,63 +90,177 @@ void test1() {
 
   E(cfg_create(&cfg));
 
-  E(cfg_parse_line(cfg, "", "test1a", 1));
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, "", "test1a", 1));
   ASSRT(cfg->option_vals->num_entries == 0);
-  E(cfg_parse_line(cfg, "   ", "test1a", 2));
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "   ", "test1a", 2));
   ASSRT(cfg->option_vals->num_entries == 0);
-  E(cfg_parse_line(cfg, "#  ", "test1a", 3));
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, "#  ", "test1a", 3));
   ASSRT(cfg->option_vals->num_entries == 0);
-  E(cfg_parse_line(cfg, " # ", "test1a", 4));
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, " # ", "test1a", 4));
   ASSRT(cfg->option_vals->num_entries == 0);
 
-  err = cfg_parse_line(cfg, "aaa", "test1a", 5);
+  err = cfg_parse_line(cfg, CFG_MODE_ADD, "aaa", "test1a", 5);
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_NOEQUALS);
   err_dispose(err);
 
-  E(cfg_parse_line(cfg, "aaa=", "test1a", 5));
+  err = cfg_parse_line(cfg, CFG_MODE_UPDATE, "aaa=", "test1a", 5);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_UPDATE_KEY_NOT_FOUND);
+  err_dispose(err);
+
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, "aaa=", "test1a", 6));
   ASSRT(cfg->option_vals->num_entries == 1);
   E(hmap_lookup(cfg->option_vals, "aaa", 3, (void **)&val));
   ASSRT(strlen(val) == 0);
   ASSRT(cfg->option_locations->num_entries == 1);
   E(hmap_lookup(cfg->option_locations, "aaa", 3, (void **)&val));
-  ASSRT(strcmp(val, "test1a:5") == 0);
+  ASSRT(strcmp(val, "test1a:6") == 0);
 
-  E(cfg_parse_line(cfg, " aab = # ", "test1a", 6));
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, " aab = # ", "test1a", 7));
   ASSRT(cfg->option_vals->num_entries == 2);
   E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
   ASSRT(strlen(val) == 0);
   ASSRT(cfg->option_locations->num_entries == 2);
   E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
-  ASSRT(strcmp(val, "test1a:6") == 0);
+  ASSRT(strcmp(val, "test1a:7") == 0);
 
-  E(cfg_parse_line(cfg, "aac=113", "test1a", 7));
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, "aac=113", "test1a", 8));
   ASSRT(cfg->option_vals->num_entries == 3);
   E(hmap_lookup(cfg->option_vals, "aac", 3, (void **)&val));
   ASSRT(strcmp(val, "113") == 0);
   ASSRT(cfg->option_locations->num_entries == 3);
   E(hmap_lookup(cfg->option_locations, "aac", 3, (void **)&val));
-  ASSRT(strcmp(val, "test1a:7") == 0);
+  ASSRT(strcmp(val, "test1a:8") == 0);
 
-  E(cfg_parse_line(cfg, "  aad = 1 1    4  #  xyz", "test1a", 8));
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, "  aad = 1 1    4  #  xyz", "test1a", 9));
   ASSRT(cfg->option_vals->num_entries == 4);
   E(hmap_lookup(cfg->option_vals, "aad", 3, (void **)&val));
   ASSRT(strcmp(val, "1 1    4") == 0);
   ASSRT(cfg->option_locations->num_entries == 4);
   E(hmap_lookup(cfg->option_locations, "aad", 3, (void **)&val));
-  ASSRT(strcmp(val, "test1a:8") == 0);
+  ASSRT(strcmp(val, "test1a:9") == 0);
 
   /* Overwrite previous one. */
-  E(cfg_parse_line(cfg, " aab= 1=12#", "test1a", 9));
+  err = cfg_parse_line(cfg, CFG_MODE_ADD, " aab= 1=12#", "test1a", 9);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_ADD_KEY_ALREADY_EXIST);
+  err_dispose(err);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, " aab= 1=12#", "test1a", 10));
   ASSRT(cfg->option_vals->num_entries == 4);
   E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
   ASSRT(strcmp(val, "1=12") == 0);
   ASSRT(cfg->option_locations->num_entries == 4);
   E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
-  ASSRT(strcmp(val, "test1a:9") == 0);
+  ASSRT(strcmp(val, "test1a:10") == 0);
 
   E(cfg_delete(cfg));
 }  /* test1 */
+
+
+void test2() {
+  cfg_t *cfg;
+  char *val;
+  err_t *err;
+  char *opt_list[] = {"abc = 123", "xyz=", "1 2 3 = x y z", NULL};
+
+  E(cfg_create(&cfg));
+
+  err = cfg_parse_string_list(cfg, CFG_MODE_UPDATE, opt_list);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_UPDATE_KEY_NOT_FOUND);
+
+  E(cfg_parse_string_list(cfg, CFG_MODE_ADD, opt_list));
+  E(hmap_lookup(cfg->option_vals, "1 2 3", 5, (void **)&val));
+  ASSRT(strcmp(val, "x y z") == 0);
+
+  E(cfg_parse_file(cfg, CFG_MODE_ADD, "tst2.cfg"));
+  E(hmap_lookup(cfg->option_vals, "opt1", 4, (void **)&val));
+  ASSRT(strcmp(val, "xyz") == 0);
+  E(hmap_lookup(cfg->option_vals, "opt2", 4, (void **)&val));
+  ASSRT(strcmp(val, "") == 0);
+  E(hmap_lookup(cfg->option_vals, "opt3", 4, (void **)&val));
+  ASSRT(strcmp(val, "3") == 0);
+
+  err = cfg_parse_file(cfg, CFG_MODE_ADD, "tst2.cfg");
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_ADD_KEY_ALREADY_EXIST);
+
+  E(cfg_delete(cfg));
+}  /* test2 */
+
+
+void test3() {
+  cfg_t *cfg;
+  char *val;
+  err_t *err;
+
+  E(cfg_create(&cfg));
+
+  err = cfg_parse_file(cfg, CFG_MODE_ADD, "-");
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_ADD_KEY_ALREADY_EXIST);
+
+  E(hmap_lookup(cfg->option_vals, "opt10", 5, (void **)&val));
+  ASSRT(strcmp(val, "xyz") == 0);
+  E(hmap_lookup(cfg->option_vals, "opt20", 5, (void **)&val));
+  ASSRT(strcmp(val, "") == 0);
+  E(hmap_lookup(cfg->option_vals, "opt30", 5, (void **)&val));
+  ASSRT(strcmp(val, "3") == 0);
+
+  E(cfg_delete(cfg));
+}  /* test3 */
+
+
+void test4() {
+  cfg_t *cfg;
+  char *val;
+  long lval;
+  err_t *err;
+
+  E(cfg_create(&cfg));
+
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, "abc=123", "test4", 1));
+  E(cfg_get_str_val(cfg, "abc", &val));
+  ASSRT(strcmp(val, "123") == 0);
+  E(cfg_get_long_val(cfg, "abc", &lval));
+  ASSRT(lval == 123);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=0x10", "test4", 2));
+  E(cfg_get_long_val(cfg, "abc", &lval));
+  ASSRT(lval == 16);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=xyz", "test4", 3));
+  err = cfg_get_long_val(cfg, "abc", &lval);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=", "test4", 4));
+  err = cfg_get_long_val(cfg, "abc", &lval);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=123 4", "test4", 5));
+  err = cfg_get_long_val(cfg, "abc", &lval);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=9223372036854775807", "test4", 6)); /* maxint */
+  E(cfg_get_long_val(cfg, "abc", &lval));
+  ASSRT(lval = 9223372036854775807);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=9223372036854775808", "test4", 7)); /* maxint */
+  err = cfg_get_long_val(cfg, "abc", &lval);
+  ASSRT(err);
+  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=-2", "test4", 8));
+  E(cfg_get_long_val(cfg, "abc", &lval));
+  ASSRT(lval == -2);
+
+  E(cfg_delete(cfg));
+}  /* test4 */
 
 
 int main(int argc, char **argv) {
@@ -154,6 +268,21 @@ int main(int argc, char **argv) {
 
   if (o_testnum == 0 || o_testnum == 1) {
     test1();
+    printf("test1: success\n");
+  }
+
+  if (o_testnum == 0 || o_testnum == 2) {
+    test2();
+    printf("test1: success\n");
+  }
+
+  if (o_testnum == 0 || o_testnum == 3) {
+    test3();
+    printf("test1: success\n");
+  }
+
+  if (o_testnum == 0 || o_testnum == 4) {
+    test4();
     printf("test1: success\n");
   }
 
