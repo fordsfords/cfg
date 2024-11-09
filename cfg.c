@@ -66,26 +66,26 @@ ERR_F cfg_create(cfg_t **rtn_cfg) {
 
 
 ERR_F cfg_delete(cfg_t *cfg) {
-  hmap_node_t *node;
+  hmap_entry_t *entry;
 
-  node = NULL;  /* Start at beginning. */
+  entry = NULL;  /* Start at beginning. */
   do {
-    ERR(hmap_next(cfg->option_vals, &node));
-    if (node) {
-        ERR_ASSRT(node->value != NULL, CFG_ERR_INTERNAL);
-        free(node->value);
+    ERR(hmap_next(cfg->option_vals, &entry));
+    if (entry) {
+        ERR_ASSRT(entry->value != NULL, CFG_ERR_INTERNAL);
+        free(entry->value);
     }
-  } while (node);
+  } while (entry);
   ERR(hmap_delete(cfg->option_vals));
 
-  node = NULL;  /* Start at beginning. */
+  entry = NULL;  /* Start at beginning. */
   do {
-    ERR(hmap_next(cfg->option_locations, &node));
-    if (node) {
-        ERR_ASSRT(node->value != NULL, CFG_ERR_INTERNAL);
-        free(node->value);
+    ERR(hmap_next(cfg->option_locations, &entry));
+    if (entry) {
+        ERR_ASSRT(entry->value != NULL, CFG_ERR_INTERNAL);
+        free(entry->value);
     }
-  } while (node);
+  } while (entry);
   ERR(hmap_delete(cfg->option_locations));
 
   return ERR_OK;
