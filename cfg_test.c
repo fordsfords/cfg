@@ -241,12 +241,12 @@ void test4() {
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_BAD_NUMBER);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=123 4", "test4", 5));
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=123 x", "test4", 5));
   err = cfg_get_long_val(cfg, "abc", &lval);
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_BAD_NUMBER);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=9223372036854775807", "test4", 6)); /* maxint */
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=9 223 372 036 854 775 807", "test4", 6)); /* maxint */
   E(cfg_get_long_val(cfg, "abc", &lval));
   ASSRT(lval = 9223372036854775807);
 
