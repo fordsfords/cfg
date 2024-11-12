@@ -60,7 +60,7 @@ void help() {
     "where:\n"
     "  -h - print help\n"
     "  -t testnum - Specify which test to run [1].\n"
-    "For details, see https://github.com/fordsfords/err\n",
+    "For details, see https://github.com/fordsfords/cfg\n",
     usage_str);
   exit(0);
 }  /* help */
