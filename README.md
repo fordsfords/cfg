@@ -1,5 +1,5 @@
 # cfg
-Simple configurator in C.
+Simple configuration loader in C.
 
 
 ## Table of contents
@@ -9,6 +9,7 @@ Simple configurator in C.
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [Table of contents](#table-of-contents)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [Introduction](#introduction)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [API](#api)  
+&nbsp;&nbsp;&nbsp;&nbsp;&bull; [Possible enhancements:](#possible-enhancements)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [Integration with "err" and "hmap".](#integration-with-err-and-hmap)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [Development](#development)  
 &nbsp;&nbsp;&nbsp;&nbsp;&bull; [License](#license)  
@@ -18,27 +19,27 @@ Simple configurator in C.
 
 ## Introduction
 
-tbd
-
-Possible enhancements:
-* Pass in an array of valid keywords, with default values
-(no location indicates unmodified default).
-char *valid_opts[] = { "abc 123" };
-This way, if the user mistypes a keyword, will get a warning/error.
-Could even have flags that indicate if a keyword is required.
-* %include file
-* abc %get_env MY_ENV_VAR
-* Quotes strings to get whitespace in vals.
-
-Random Facts:
-* Values may not contain whitespace. Special characters are OK and are not interpreted in any special way.
+Allows you load a file with keyword=value pairs and access
+the values via a hashmap.
+Caller can define default values.
 
 
 ## API
 
-Should be pretty obvious. 
-APIs return 0 for success, -1 for error.
-A key is an arbitrary byte array, not a necessarily a valid C string (although a C string works fine).
+Should be pretty obvious just looking at the "cfg.h" file. 
+Maybe some day I'll put more here.
+
+Uses "err" subsystem; see https://github.com/fordsfords/err
+
+keys and values may not contain whitespace. Special characters are OK and are not interpreted in any special way
+except for equals sign (=), which separates keyword from value.
+
+
+## Possible enhancements:
+* Have flags that indicate if a keyword is required.
+* %include file
+* abc %get_env MY_ENV_VAR - allows
+* Quotes strings to get whitespace in vals.
 
 
 ## Integration with "err" and "hmap".
