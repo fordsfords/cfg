@@ -44,8 +44,9 @@ key2=value2   # Inline comments are supported
 ```
 
 Rules:
+- Line lengths are limited to 1000 characters (not including cr/lf/null).
 - One key-value pair per line
-- Keys must start with "_", "-" or alphabetic character,
+- Key names must start with "_", "-" or alphabetic character,
 followed by zero or more "_", "-", or alphanumeric characters.
 - Keys and values are separated by '=' character
 - Lines starting with '#' are treated as comments
