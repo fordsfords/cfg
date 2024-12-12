@@ -16,4 +16,6 @@ rm -f cfg_test
 
 gcc -std=c99 -pedantic -Wall -Wextra -Werror -g -o cfg_test cfg.c hmap.c err.c cfg_test.c; if [ $? -ne 0 ]; then exit 1; fi
 
+gcc -std=c99 -pedantic -Wall -Wextra -Werror -g -o example cfg.c hmap.c err.c example.c; if [ $? -ne 0 ]; then exit 1; fi
+
 echo "Build successful"

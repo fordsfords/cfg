@@ -8,6 +8,7 @@ x.*
 
 # Object files
 cfg_test
+example
 *.o
 *.ko
 *.obj

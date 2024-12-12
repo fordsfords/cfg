@@ -165,7 +165,7 @@ void test2() {
   cfg_t *cfg;
   char *val;
   err_t *err;
-  char *opt_list[] = {"abc = 123", "xyz=", "1 2 3 = x y z", NULL};
+  char *opt_list[] = {"aBc1 = 123", "xyz=", "_a-b= x y z", NULL};
 
   E(cfg_create(&cfg));
 
@@ -174,7 +174,7 @@ void test2() {
   ASSRT(err->code == CFG_ERR_UPDATE_KEY_NOT_FOUND);
 
   E(cfg_parse_string_list(cfg, CFG_MODE_ADD, opt_list));
-  E(hmap_lookup(cfg->option_vals, "1 2 3", 5, (void **)&val));
+  E(hmap_lookup(cfg->option_vals, "_a-b", 4, (void **)&val));
   ASSRT(strcmp(val, "x y z") == 0);
 
   E(cfg_parse_file(cfg, CFG_MODE_ADD, "tst2.cfg"));
@@ -223,42 +223,42 @@ void test4() {
 
   E(cfg_create(&cfg));
 
-  E(cfg_parse_line(cfg, CFG_MODE_ADD, "abc=123", "test4", 1));
-  E(cfg_get_str_val(cfg, "abc", &val));
+  E(cfg_parse_line(cfg, CFG_MODE_ADD, "aBc1=123", "test4", 1));
+  E(cfg_get_str_val(cfg, "aBc1", &val));
   ASSRT(strcmp(val, "123") == 0);
-  E(cfg_get_long_val(cfg, "abc", &lval));
+  E(cfg_get_long_val(cfg, "aBc1", &lval));
   ASSRT(lval == 123);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=0x10", "test4", 2));
-  E(cfg_get_long_val(cfg, "abc", &lval));
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=0x10", "test4", 2));
+  E(cfg_get_long_val(cfg, "aBc1", &lval));
   ASSRT(lval == 16);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=xyz", "test4", 3));
-  err = cfg_get_long_val(cfg, "abc", &lval);
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=xyz", "test4", 3));
+  err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_BAD_NUMBER);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=", "test4", 4));
-  err = cfg_get_long_val(cfg, "abc", &lval);
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=", "test4", 4));
+  err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_BAD_NUMBER);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=123 x", "test4", 5));
-  err = cfg_get_long_val(cfg, "abc", &lval);
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=123 x", "test4", 5));
+  err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_BAD_NUMBER);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=9 223 372 036 854 775 807", "test4", 6)); /* maxint */
-  E(cfg_get_long_val(cfg, "abc", &lval));
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=9 223 372 036 854 775 807", "test4", 6)); /* maxint */
+  E(cfg_get_long_val(cfg, "aBc1", &lval));
   ASSRT(lval = 9223372036854775807);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=9223372036854775808", "test4", 7)); /* maxint */
-  err = cfg_get_long_val(cfg, "abc", &lval);
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=9223372036854775808", "test4", 7)); /* maxint */
+  err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_BAD_NUMBER);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "abc=-2", "test4", 8));
-  E(cfg_get_long_val(cfg, "abc", &lval));
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=-2", "test4", 8));
+  E(cfg_get_long_val(cfg, "aBc1", &lval));
   ASSRT(lval == -2);
 
   E(cfg_delete(cfg));
