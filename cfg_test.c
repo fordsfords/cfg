@@ -113,34 +113,34 @@ void test1() {
 
   E(cfg_parse_line(cfg, CFG_MODE_ADD, "aaa=", "test1a", 6));
   ASSRT(cfg->option_vals->num_entries == 1);
-  E(hmap_lookup(cfg->option_vals, "aaa", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "aaa", (void **)&val));
   ASSRT(strlen(val) == 0);
   ASSRT(cfg->option_locations->num_entries == 1);
-  E(hmap_lookup(cfg->option_locations, "aaa", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_locations, "aaa", (void **)&val));
   ASSRT(strcmp(val, "test1a:6") == 0);
 
   E(cfg_parse_line(cfg, CFG_MODE_ADD, " aab = # ", "test1a", 7));
   ASSRT(cfg->option_vals->num_entries == 2);
-  E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "aab", (void **)&val));
   ASSRT(strlen(val) == 0);
   ASSRT(cfg->option_locations->num_entries == 2);
-  E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_locations, "aab", (void **)&val));
   ASSRT(strcmp(val, "test1a:7") == 0);
 
   E(cfg_parse_line(cfg, CFG_MODE_ADD, "aac=113", "test1a", 8));
   ASSRT(cfg->option_vals->num_entries == 3);
-  E(hmap_lookup(cfg->option_vals, "aac", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "aac", (void **)&val));
   ASSRT(strcmp(val, "113") == 0);
   ASSRT(cfg->option_locations->num_entries == 3);
-  E(hmap_lookup(cfg->option_locations, "aac", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_locations, "aac", (void **)&val));
   ASSRT(strcmp(val, "test1a:8") == 0);
 
   E(cfg_parse_line(cfg, CFG_MODE_ADD, "  aad = 1 1    4  #  xyz", "test1a", 9));
   ASSRT(cfg->option_vals->num_entries == 4);
-  E(hmap_lookup(cfg->option_vals, "aad", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "aad", (void **)&val));
   ASSRT(strcmp(val, "1 1    4") == 0);
   ASSRT(cfg->option_locations->num_entries == 4);
-  E(hmap_lookup(cfg->option_locations, "aad", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_locations, "aad", (void **)&val));
   ASSRT(strcmp(val, "test1a:9") == 0);
 
   /* Overwrite previous one. */
@@ -151,10 +151,10 @@ void test1() {
 
   E(cfg_parse_line(cfg, CFG_MODE_UPDATE, " aab= 1=12#", "test1a", 10));
   ASSRT(cfg->option_vals->num_entries == 4);
-  E(hmap_lookup(cfg->option_vals, "aab", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "aab", (void **)&val));
   ASSRT(strcmp(val, "1=12") == 0);
   ASSRT(cfg->option_locations->num_entries == 4);
-  E(hmap_lookup(cfg->option_locations, "aab", 3, (void **)&val));
+  E(hmap_slookup(cfg->option_locations, "aab", (void **)&val));
   ASSRT(strcmp(val, "test1a:10") == 0);
 
   E(cfg_delete(cfg));
@@ -174,15 +174,15 @@ void test2() {
   ASSRT(err->code == CFG_ERR_UPDATE_KEY_NOT_FOUND);
 
   E(cfg_parse_string_list(cfg, CFG_MODE_ADD, opt_list));
-  E(hmap_lookup(cfg->option_vals, "_a-b", 4, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "_a-b", (void **)&val));
   ASSRT(strcmp(val, "x y z") == 0);
 
   E(cfg_parse_file(cfg, CFG_MODE_ADD, "tst2.cfg"));
-  E(hmap_lookup(cfg->option_vals, "opt1", 4, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "opt1", (void **)&val));
   ASSRT(strcmp(val, "xyz") == 0);
-  E(hmap_lookup(cfg->option_vals, "opt2", 4, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "opt2", (void **)&val));
   ASSRT(strcmp(val, "") == 0);
-  E(hmap_lookup(cfg->option_vals, "opt3", 4, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "opt3", (void **)&val));
   ASSRT(strcmp(val, "3") == 0);
 
   err = cfg_parse_file(cfg, CFG_MODE_ADD, "tst2.cfg");
@@ -204,11 +204,11 @@ void test3() {
   ASSRT(err);
   ASSRT(err->code == CFG_ERR_ADD_KEY_ALREADY_EXIST);
 
-  E(hmap_lookup(cfg->option_vals, "opt10", 5, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "opt10", (void **)&val));
   ASSRT(strcmp(val, "xyz") == 0);
-  E(hmap_lookup(cfg->option_vals, "opt20", 5, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "opt20", (void **)&val));
   ASSRT(strcmp(val, "") == 0);
-  E(hmap_lookup(cfg->option_vals, "opt30", 5, (void **)&val));
+  E(hmap_slookup(cfg->option_vals, "opt30", (void **)&val));
   ASSRT(strcmp(val, "3") == 0);
 
   E(cfg_delete(cfg));
