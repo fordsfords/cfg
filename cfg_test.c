@@ -236,26 +236,26 @@ void test4() {
   E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=xyz", "test4", 3));
   err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
-  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+  ASSRT(err->code == ERR_ERR_BAD_NUMBER);
 
   E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=", "test4", 4));
   err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
-  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+  ASSRT(err->code == ERR_ERR_BAD_NUMBER);
 
   E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=123 x", "test4", 5));
   err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
-  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+  ASSRT(err->code == ERR_ERR_BAD_NUMBER);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=9 223 372 036 854 775 807", "test4", 6)); /* maxint */
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=9 223 372 036 854 775 807", "test4", 6)); /* maxlong */
   E(cfg_get_long_val(cfg, "aBc1", &lval));
   ASSRT(lval = 9223372036854775807);
 
-  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=9223372036854775808", "test4", 7)); /* maxint */
+  E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=9223372036854775808", "test4", 7)); /* maxlong */
   err = cfg_get_long_val(cfg, "aBc1", &lval);
   ASSRT(err);
-  ASSRT(err->code == CFG_ERR_BAD_NUMBER);
+  ASSRT(err->code == ERR_ERR_BAD_NUMBER);
 
   E(cfg_parse_line(cfg, CFG_MODE_UPDATE, "aBc1=-2", "test4", 8));
   E(cfg_get_long_val(cfg, "aBc1", &lval));

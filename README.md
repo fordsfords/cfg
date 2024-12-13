@@ -29,7 +29,7 @@ A lightweight C library for parsing and managing configuration data in key-value
 - Caller can set default values.
 - Caller uses a [hash map](https://github.com/fordsfords/hmap) to retrieve values.
 - Error handling with the [err module](https://github.com/fordsfords/err).
-- Zero external dependencies except for standard C library
+- Zero external dependencies except for standard C library.
 
 
 ## Configuration File Format
@@ -45,16 +45,16 @@ key2=value2   # Inline comments are supported
 
 Rules:
 - Line lengths are limited to 1000 characters (not including cr/lf/null).
-- One key-value pair per line
+- One key-value pair per line.
 - Key names must start with "_", "-" or alphabetic character,
 followed by zero or more "_", "-", or alphanumeric characters.
-- Keys and values are separated by '=' character
-- Lines starting with '#' are treated as comments
-- Inline comments after '#' are ignored
-- Leading and trailing whitespace is automatically trimmed
-- Empty lines are ignored
-- Keys cannot contain whitespace
-- Values cannot contain '#'
+- Keys and values are separated by '=' character.
+- Lines starting with '#' are treated as comments.
+- Inline comments after '#' are ignored.
+- Leading and trailing whitespace is automatically trimmed.
+- Empty lines are ignored.
+- Keys cannot contain whitespace.
+- Values cannot contain '#'.
 
 
 ## API
@@ -78,13 +78,13 @@ ERR_F cfg_parse_file(cfg_t *cfg, int mode, const char *filename);
 ```
 Loads configuration from a file. Use "-" for stdin.
 - `mode`: CFG_MODE_ADD or CFG_MODE_UPDATE; see [Operation Modes](#operational-modes).
-- Returns error if file cannot be opened or contains invalid format
+- Returns error if file cannot be opened or contains invalid format.
 
 ```c
 ERR_F cfg_parse_string_list(cfg_t *cfg, int mode, char **string_list);
 ```
 Loads configuration from a NULL-terminated array of strings.
-- Each string should follow the same format as file lines
+- Each string should follow the same format as file lines.
 - `mode`: CFG_MODE_ADD or CFG_MODE_UPDATE; see [Operation Modes](#operational-modes).
 
 The string list is an array of pointers to strings, with the last element NULL.
@@ -102,22 +102,23 @@ For example:
 ERR_F cfg_get_str_val(cfg_t *cfg, const char *key, char **rtn_value);
 ```
 Retrieves string value for a given key.
-- Returns error if key doesn't exist
-- Returned string should not be modified or freed
+- Returns error if key doesn't exist.
+- Returned string should not be modified or freed.
 
 ```c
 ERR_F cfg_get_long_val(cfg_t *cfg, const char *key, long *rtn_value);
 ```
 Retrieves and converts value to long integer.
-- Supports decimal and hexadecimal (0x prefix) formats
-- Returns error if value cannot be converted
+- Supports decimal and hexadecimal (0x prefix) formats.
+- Allows spaces in numbers to make them more readable. For example, "1 234 567".
+- Returns error if value cannot be converted.
 
 ### Operation Modes
 
 Reading configuration with `cfg_parse_string_list()` or `cfg_parse_string_list()`
 can be done in two modes:
-- `CFG_MODE_ADD`: Keys must not already exist
-- `CFG_MODE_UPDATE`: Keys must already exist
+- `CFG_MODE_ADD`: Keys must not already exist.
+- `CFG_MODE_UPDATE`: Keys must already exist.
 
 The "add" mode is used by the application to set define the legal options
 and set default values.
