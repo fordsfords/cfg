@@ -31,6 +31,9 @@ A lightweight C library for parsing and managing configuration data in key-value
 - Error handling with the [err module](https://github.com/fordsfords/err).
 - Zero external dependencies except for standard C library.
 
+Thanks to Claude.ai for some help with the code and much help with the doc.
+See https://blog.geeky-boy.com/2024/12/claude-as-coders-assistant.html for details.
+ 
 
 ## Configuration File Format
 
